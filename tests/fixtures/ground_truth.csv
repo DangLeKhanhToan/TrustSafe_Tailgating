@@ -1,0 +1,4 @@
+person_id,t_cross_s,direction,grant_id
+p01,11.0,in,g01
+p02,12.0,in,g01
+p03,21.0,in,g02

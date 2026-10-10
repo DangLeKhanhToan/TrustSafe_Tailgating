@@ -1,0 +1,20 @@
+camera:
+  id: door_01
+door:
+  threshold: [[640, 100], [640, 650]]
+  inside_reference_point: [900, 360]
+  hysteresis_px: 12
+crossing:
+  anchor: bbox_center
+  stable_frames: 3
+  min_displacement_px: 25
+grant:
+  pre_grace_s: 0.0
+  post_grace_s: 0.5
+detector:
+  model_path: models/yolox_nano.onnx
+  input_size: 416
+  confidence_threshold: 0.30
+  nms_iou_threshold: 0.50
+tracker:
+  max_lost_seconds: 1.0
