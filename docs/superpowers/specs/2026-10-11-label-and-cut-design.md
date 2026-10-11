@@ -8,6 +8,11 @@ video. A separate cutter converts that canonical session annotation into short,
 reproducible benchmark clips with rebased timestamps and the exact grant/ground-
 truth CSV formats consumed by the tailgating pipeline.
 
+One fixed camera may contain one or more independently configured door
+thresholds. Every grant, crossing, and benchmark event is scoped to a
+`door_id`; a scenario describes behavior at a door and does not define camera
+geometry.
+
 The workflow supports up to three simultaneously visible actors and three
 derived alert outcomes: `none`, `tailgating`, and `unauthorised_entry`. Alert
 outcomes are derived from primitive labels rather than entered by hand.
@@ -21,6 +26,7 @@ outcomes are derived from primitive labels rather than entered by hand.
 - Canonical JSON session annotation with versioning.
 - Grant IDs, person IDs, crossing IDs, scenario IDs, event ranges, notes, and
   review flags.
+- Multiple `door_id` values within one camera view and recording session.
 - Automatic grant suggestion for each entry crossing.
 - Undo, save, resume, keyboard seeking, and annotation validation.
 - Event-safe cutting with timestamp rebasing.
@@ -61,6 +67,7 @@ not be edited independently.
   "grants": [
     {
       "grant_id": "g001",
+      "door_id": "door_01",
       "t_unlock_s": 15.2,
       "t_relock_s": 20.4,
       "scenario_id": 1,
@@ -73,6 +80,7 @@ not be edited independently.
       "person_id": "p001",
       "t_cross_s": 16.3,
       "direction": "in",
+      "door_id": "door_01",
       "grant_id": "g001",
       "needs_review": false
     }
@@ -80,6 +88,7 @@ not be edited independently.
   "events": [
     {
       "event_id": "e001",
+      "door_id": "door_01",
       "scenario_id": 1,
       "t_start_s": 12.0,
       "t_end_s": 23.0,
@@ -94,6 +103,52 @@ not be edited independently.
 All identifiers are unique within one session. A globally unique reference is
 the pair `(session_id, local_id)`.
 
+Each grant also contains its door scope:
+
+```json
+{
+  "grant_id": "g001",
+  "door_id": "door_01",
+  "t_unlock_s": 15.2,
+  "t_relock_s": 20.4,
+  "scenario_id": 1
+}
+```
+
+### Camera configuration
+
+`--camera-config` points to geometric calibration, not event labels. One config
+belongs to one fixed camera and can contain multiple doors:
+
+```yaml
+camera:
+  id: camera_lobby_01
+  reference_width: 1920
+  reference_height: 1080
+
+doors:
+  - id: door_01
+    threshold: [[620, 120], [620, 900]]
+    inside_reference_point: [850, 500]
+    hysteresis_px: 12
+    roi: [[420, 80], [900, 80], [900, 980], [420, 980]]
+
+  - id: door_02
+    threshold: [[1320, 120], [1320, 900]]
+    inside_reference_point: [1550, 500]
+    hysteresis_px: 12
+    roi: [[1100, 80], [1750, 80], [1750, 980], [1100, 980]]
+```
+
+The configuration tool allocates `door_01`, `door_02`, and so on, renders each
+door with a distinct color and label, and permits selecting or editing one door
+at a time. Door ROIs may not overlap by default; unusual overlapping layouts
+require an explicit override because one track could otherwise be ambiguous.
+
+If video resolution differs from the reference resolution, coordinates are
+scaled only when aspect ratio matches within tolerance. A materially different
+aspect ratio is rejected and requires camera reconfiguration.
+
 ## 4. Identifier Semantics
 
 - `grant_id` identifies one access-control authorization. The labeler allocates
@@ -105,18 +160,22 @@ the pair `(session_id, local_id)`.
   as `c001`, `c002`, and so on.
 - `event_id` identifies one benchmark episode and auto-increments as `e001`,
   `e002`, and so on.
+- `door_id` identifies one geometric threshold in the configured camera. Door
+  IDs remain stable across sessions recorded with that unchanged camera.
 - `scenario_id` is the brief's scenario category, not an alert class.
 
-No identifier implies equality across namespaces. In particular, `g001`,
-`p001`, and predicted `track_id=1` are unrelated.
+No identifier implies equality across namespaces. In particular, `door_01`,
+`g001`, `p001`, and predicted `track_id=1` are unrelated.
 
 ## 5. Derived Ground Truth
 
 For a grant, expected entry count is the number of unique `person_id` values
-whose `direction` is `in` and whose `grant_id` matches:
+whose `direction` is `in`, whose `door_id` matches, and whose `grant_id`
+matches:
 
 ```text
 gt_count(grant) = |{person_id : crossing.direction = in
+                                and crossing.door_id = grant.door_id
                                 and crossing.grant_id = grant.grant_id}|
 ```
 
@@ -145,6 +204,7 @@ The application maintains these independent states:
 ### Selection
 
 - current person;
+- current door;
 - current scenario;
 - selected annotation for deletion or review;
 - open grant, if any;
@@ -172,6 +232,7 @@ flow. Imported overlapping grants are preserved but highlighted as warnings.
 
 ### Grants and events
 
+- `D`: cycle the selected configured door.
 - `G`: start a new grant and allocate the next grant ID.
 - `R`: close the current grant.
 - `B`: begin an event range.
@@ -203,10 +264,11 @@ for people. `S`, then `0`, selects scenario 10.
 
 When adding an `in` crossing:
 
-- exactly one grant active at `t_cross_s`: auto-fill that `grant_id`;
+- exactly one grant active for the selected `door_id` at `t_cross_s`: auto-fill
+  that `grant_id`;
 - no active grant: leave `grant_id` null;
-- multiple imported grants active: pause and show candidates; use bracket keys
-  to select one or mark it for review.
+- multiple imported grants active for the selected door: pause and show
+  candidates; use bracket keys to select one or mark it for review.
 
 An `out` crossing defaults to null grant ID. The labeler displays, but does not
 silently apply, configurable inference grace periods; canonical ground truth is
@@ -222,12 +284,14 @@ Saving is rejected for:
 - crossing/event timestamps outside video duration;
 - invalid direction or scenario ID;
 - a crossing referencing an unknown person or grant;
+- an unknown `door_id`, or a grant/crossing/event whose door scopes disagree;
 - an event whose end precedes its start;
 - an open grant or open event range.
 
 Saving is allowed with warnings for:
 
 - overlapping grants;
+- overlapping door ROIs without an explicit camera-config override;
 - crossing within 0.25 seconds of a grant boundary;
 - `in` crossing without a grant;
 - event range without any grant or crossing;
@@ -302,16 +366,21 @@ clips/
 Generated grant CSV follows the brief:
 
 ```csv
-grant_id,t_unlock_s,t_relock_s
-g001,5.20,10.40
+grant_id,door_id,t_unlock_s,t_relock_s
+g001,door_01,5.20,10.40
 ```
 
-Generated ground truth adds `crossing_id` while preserving required fields:
+Generated ground truth adds `crossing_id` and `door_id` while preserving the
+brief's required fields:
 
 ```csv
-crossing_id,person_id,t_cross_s,direction,grant_id
-c001,p001,6.30,in,g001
+crossing_id,person_id,t_cross_s,direction,door_id,grant_id
+c001,p001,6.30,in,door_01,g001
 ```
+
+The inference loader accepts the original single-door brief schema and the
+extended multi-door schema. With one configured door, a missing `door_id`
+implies that door. With two or more configured doors, `door_id` is mandatory.
 
 ## 12. Split and Leakage Policy
 
@@ -380,6 +449,7 @@ take for recovery, though audio is not required in generated clips.
 - Unauthorized-entry precision, recall, F1, and timestamp error.
 - Crossing precision, recall, F1, direction accuracy, and timestamp error.
 - Grant-association accuracy.
+- Per-door counts, alerts, crossing metrics, and macro averages across doors.
 - Repeated-crossing deduplication error rate.
 - Crossing-level track-fragmentation diagnosis using ground-truth person IDs.
 - All applicable metrics grouped by scenario ID and session split.
@@ -391,6 +461,8 @@ bounding boxes and identities.
 
 - Pure schema tests cover IDs, unique-person derivation, validation, undo, and
   automatic grant suggestion.
+- Multi-door tests cover door selection, per-door grants, wrong-door
+  references, independent simultaneous events, and ROI ambiguity.
 - Pure cutting-plan tests cover padding, minimum/maximum duration, source-edge
   clipping, grant containment, and timestamp rebasing.
 - Integration tests create a tiny synthetic video when OpenCV is available,
@@ -404,6 +476,8 @@ bounding boxes and identities.
   independent data.
 - `in -> out -> in` for one person and grant produces a unique-person count of
   one.
+- Simultaneous activity at two doors is counted independently and never shares
+  grants across doors.
 - Auto-generated IDs remain stable across undo/save/resume.
 - Every generated clip contains its complete primary event and all referenced
   grants/crossings.
