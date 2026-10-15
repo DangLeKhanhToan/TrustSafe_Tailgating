@@ -1,0 +1,5 @@
+session,clips,grants,frames,elapsed_s,fps,tailgating_precision,tailgating_recall,tailgating_f1,count_accuracy,count_mae,tp,fp,fn,tn,unauthorized_precision,unauthorized_recall,unauthorized_f1,unauthorized_tp,unauthorized_fp,unauthorized_fn
+Bubi_1,16,9,4750,389.197,12.205,0.0,0.0,0.0,1.0,0.0,0,0,0,9,0.5,1.0,0.6667,1,1,0
+Bubi_2,8,7,2106,86.564,24.329,0.0,0.0,0.0,0.8571,0.1429,0,1,0,6,0.0,0.0,0.0,0,0,0
+Home,16,14,2518,108.88,23.126,0.75,0.75,0.75,0.6429,0.4286,3,1,1,9,0.0,0.0,0.0,0,0,2
+pilot_01,1,1,220,9.061,24.28,0.0,0.0,0.0,1.0,0.0,0,0,0,1,0.0,0.0,0.0,0,0,0

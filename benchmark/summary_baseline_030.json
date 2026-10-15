@@ -1,0 +1,206 @@
+{
+  "protocol": {
+    "model": "models\\yolox_nano.onnx",
+    "model_input": "fixed 416x416",
+    "detector_confidence": 0.3,
+    "tracker": "CentroidTracker",
+    "frame_stride": 1,
+    "render_annotated_video": true,
+    "python": "3.13.13",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor_identifier": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "onnxruntime": "1.23.2",
+    "speed_definition": "total processed frames / summed pipeline elapsed_s; excludes process and model startup"
+  },
+  "dataset": {
+    "clips_discovered": 41,
+    "invalid_items": [],
+    "scenario_ids_present": [
+      1
+    ],
+    "missing_required_scenarios": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ]
+  },
+  "overall": {
+    "clips_total": 41,
+    "frames": 9594,
+    "elapsed_s": 593.702,
+    "processing_fps": 16.15962216734995,
+    "precision": 0.6,
+    "recall": 0.75,
+    "f1": 0.6666666666666665,
+    "count_accuracy": 0.8064516129032258,
+    "count_mae": 0.22580645161290322,
+    "confusion": {
+      "tp": 3,
+      "fp": 2,
+      "fn": 1,
+      "tn": 25
+    },
+    "grants": 31,
+    "unauthorized": {
+      "precision": 0.5,
+      "recall": 0.3333333333333333,
+      "f1": 0.4,
+      "confusion": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 2
+      }
+    }
+  },
+  "by_scenario": {
+    "1": {
+      "clips_total": 41,
+      "frames": 9594,
+      "elapsed_s": 593.702,
+      "processing_fps": 16.15962216734995,
+      "precision": 0.6,
+      "recall": 0.75,
+      "f1": 0.6666666666666665,
+      "count_accuracy": 0.8064516129032258,
+      "count_mae": 0.22580645161290322,
+      "confusion": {
+        "tp": 3,
+        "fp": 2,
+        "fn": 1,
+        "tn": 25
+      },
+      "grants": 31,
+      "unauthorized": {
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1": 0.4,
+        "confusion": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 2
+        }
+      }
+    }
+  },
+  "failed": [],
+  "by_session": {
+    "Bubi_1": {
+      "clips_total": 16,
+      "frames": 4750,
+      "elapsed_s": 389.197,
+      "processing_fps": 12.204616171244897,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "count_accuracy": 1.0,
+      "count_mae": 0.0,
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 9
+      },
+      "grants": 9,
+      "unauthorized": {
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.6666666666666666,
+        "confusion": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 0
+        }
+      }
+    },
+    "Bubi_2": {
+      "clips_total": 8,
+      "frames": 2106,
+      "elapsed_s": 86.56400000000001,
+      "processing_fps": 24.328820294810775,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "count_accuracy": 0.8571428571428571,
+      "count_mae": 0.14285714285714285,
+      "confusion": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "tn": 6
+      },
+      "grants": 7,
+      "unauthorized": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        }
+      }
+    },
+    "Home": {
+      "clips_total": 16,
+      "frames": 2518,
+      "elapsed_s": 108.88,
+      "processing_fps": 23.126377663482735,
+      "precision": 0.75,
+      "recall": 0.75,
+      "f1": 0.75,
+      "count_accuracy": 0.6428571428571429,
+      "count_mae": 0.42857142857142855,
+      "confusion": {
+        "tp": 3,
+        "fp": 1,
+        "fn": 1,
+        "tn": 9
+      },
+      "grants": 14,
+      "unauthorized": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 2
+        }
+      }
+    },
+    "pilot_01": {
+      "clips_total": 1,
+      "frames": 220,
+      "elapsed_s": 9.061,
+      "processing_fps": 24.279880807857854,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "count_accuracy": 1.0,
+      "count_mae": 0.0,
+      "confusion": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 1
+      },
+      "grants": 1,
+      "unauthorized": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        }
+      }
+    }
+  }
+}

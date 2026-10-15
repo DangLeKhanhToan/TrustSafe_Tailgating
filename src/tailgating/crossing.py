@@ -18,6 +18,16 @@ class _TrackState:
     entry_emitted: bool = False
 
 
+@dataclass(frozen=True)
+class CrossingDebugState:
+    track_id: int
+    zone: str
+    stage: str
+    outside_seen: int
+    inside_seen: int
+    stable_frames: int
+
+
 class CrossingDetector:
     def __init__(self, threshold: ThresholdConfig, stable_frames: int = 3, min_displacement_px: float = 25) -> None:
         if stable_frames <= 0 or min_displacement_px <= 0:
@@ -26,6 +36,29 @@ class CrossingDetector:
         self.stable_frames = stable_frames
         self.min_displacement_px = min_displacement_px
         self._states: dict[int, _TrackState] = {}
+
+    def debug_state(self, track_id: int) -> CrossingDebugState:
+        state = self._states[track_id]
+        if state.entry_emitted:
+            stage = "CROSSED"
+        elif state.zone is Zone.BAND:
+            stage = "IN_BAND"
+        elif state.candidate_time is not None:
+            stage = "CONFIRMING"
+        elif state.zone is Zone.OUTSIDE and state.outside_seen >= self.stable_frames:
+            stage = "ARMED"
+        elif state.zone is Zone.INSIDE:
+            stage = "INSIDE"
+        else:
+            stage = "OBSERVING"
+        return CrossingDebugState(
+            track_id,
+            state.zone.value.upper(),
+            stage,
+            state.outside_seen,
+            state.inside_seen,
+            self.stable_frames,
+        )
 
     def update(self, track: Track) -> Crossing | None:
         point = track.anchor

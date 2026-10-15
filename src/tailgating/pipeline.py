@@ -9,7 +9,7 @@ from typing import Iterable, Sequence
 from .crossing import CrossingDetector
 from .detector import YoloXOnnxDetector
 from .events import EventAggregator
-from .grants import load_grants
+from .grants import find_grant, load_grants
 from .schemas import CameraConfig, Event, Grant, ThresholdConfig, Track, load_camera_config
 from .tracker import CentroidTracker
 from .video import VideoReader
@@ -59,12 +59,24 @@ def run_pipeline(video_path: Path, grants_path: Path, config_path: Path, output_
         try:
             for frame in reader:
                 tracks = tracker.update(detector.detect(frame.image), frame.index, frame.timestamp_s)
+                frame_alert: str | None = None
                 for track in tracks:
                     crossing = crossing_detector.update(track)
                     if crossing:
+                        if find_grant(crossing, grants, config.pre_grace_s, config.post_grace_s) is None:
+                            frame_alert = "unauthorised_entry"
                         aggregator.add(crossing)
                 grant_id, entries, alert = aggregator.status_at(frame.timestamp_s)
-                renderer.write(frame.image, tracks, frame.timestamp_s, grant_id, entries, alert)
+                debug_states = [crossing_detector.debug_state(track.track_id) for track in tracks]
+                renderer.write(
+                    frame.image,
+                    tracks,
+                    frame.timestamp_s,
+                    grant_id,
+                    entries,
+                    frame_alert or alert,
+                    debug_states,
+                )
                 frames += 1
         finally:
             renderer.close()

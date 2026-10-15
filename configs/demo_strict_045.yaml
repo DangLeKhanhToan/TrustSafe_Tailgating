@@ -1,0 +1,18 @@
+camera:
+  id: demo_tailgating
+door:
+  threshold: [[833, 553], [1153, 1077]]
+  inside_reference_point: [1160, 674]
+  hysteresis_px: 12
+crossing:
+  anchor: bbox_center
+  stable_frames: 3
+  min_displacement_px: 25
+grant:
+  pre_grace_s: 0.0
+  post_grace_s: 0.5
+detector:
+  model_path: models/yolox_nano.onnx
+  input_size: 416
+  confidence_threshold: 0.45
+  nms_iou_threshold: 0.50

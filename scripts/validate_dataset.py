@@ -17,9 +17,12 @@ def main() -> int:
     parser.add_argument("--post-grace-s", type=float, default=0.5)
     args = parser.parse_args()
     errors = 0
-    for grants_path in sorted(args.clips.glob("*_grants.csv")):
+    found = 0
+    for grants_path in sorted(args.clips.rglob("*_grants.csv")):
+        found += 1
         stem = grants_path.name.removesuffix("_grants.csv")
-        video, gt = args.clips / f"{stem}.mp4", args.clips / f"{stem}_gt.csv"
+        video = grants_path.with_name(f"{stem}.mp4")
+        gt = grants_path.with_name(f"{stem}_gt.csv")
         for expected in (video, gt):
             if not expected.is_file():
                 print(f"ERROR {stem}: missing {expected.name}")
@@ -43,6 +46,10 @@ def main() -> int:
                     if grant_id and grant_id not in known:
                         print(f"ERROR {stem}:{row_number}: unknown grant_id {grant_id}")
                         errors += 1
+    if found == 0:
+        print(f"ERROR: no *_grants.csv files found under {args.clips}")
+        return 1
+    print(f"validated={found} errors={errors}")
     return 1 if errors else 0
 
 

@@ -37,3 +37,22 @@ class CrossingTests(unittest.TestCase):
 
     def test_hesitation_then_return_outside_is_not_an_entry(self) -> None:
         self.assertEqual(feed(make_detector(), [30, 35, 46, 50, 52, 44, 35]), [])
+
+    def test_debug_stage_follows_crossing_state_machine(self) -> None:
+        detector = make_detector()
+        stages = []
+        for index, x in enumerate([30, 35, 48, 60, 67]):
+            detector.update(Track(7, (x - 5, 20, x + 5, 80), Point(x, 50), index * 0.1))
+            stages.append(detector.debug_state(7).stage)
+
+        self.assertEqual(stages, ["OBSERVING", "ARMED", "IN_BAND", "CONFIRMING", "CROSSED"])
+
+    def test_debug_state_contains_zone_and_stability_counts(self) -> None:
+        detector = make_detector()
+        feed(detector, [30, 35], track_id=9)
+
+        state = detector.debug_state(9)
+
+        self.assertEqual(state.zone, "OUTSIDE")
+        self.assertEqual(state.outside_seen, 2)
+        self.assertEqual(state.stable_frames, 2)
